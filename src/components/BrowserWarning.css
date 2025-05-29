@@ -1,0 +1,51 @@
+.browser-warning {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  background-color: #fff3cd;
+  border-bottom: 1px solid #ffeeba;
+  color: #856404;
+  z-index: 1000;
+  padding: 10px;
+  text-align: center;
+}
+
+.warning-content {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 10px;
+}
+
+.warning-content h3 {
+  margin-top: 0;
+  margin-bottom: 10px;
+  font-size: 18px;
+}
+
+.warning-content p {
+  margin: 8px 0;
+}
+
+.small-text {
+  font-size: 14px;
+  opacity: 0.8;
+}
+
+@media (max-width: 768px) {
+  .warning-content {
+    padding: 5px;
+  }
+  
+  .warning-content h3 {
+    font-size: 16px;
+  }
+  
+  .warning-content p {
+    font-size: 14px;
+  }
+  
+  .small-text {
+    font-size: 12px;
+  }
+} 

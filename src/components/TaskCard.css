@@ -1,0 +1,131 @@
+.task-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 20px;
+  background-color: #f8f9fa;
+  border-radius: 12px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.task-image-container {
+  width: 70%;
+  max-width: 350px;
+  margin-bottom: 20px;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.task-image {
+  width: 100%;
+  height: auto;
+  display: block;
+  object-fit: contain;
+}
+
+.task-content {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.task-prompt {
+  font-size: 24px;
+  margin-bottom: 20px;
+  color: #333;
+  text-align: center;
+  font-weight: 600;
+}
+
+.speak-button {
+  padding: 12px 24px;
+  background-color: #4285f4;
+  color: white;
+  border: none;
+  border-radius: 24px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+  margin-bottom: 20px;
+}
+
+.speak-button:hover {
+  background-color: #2b6dd8;
+}
+
+.transcript-container {
+  margin-top: 20px;
+  width: 100%;
+  text-align: center;
+}
+
+.transcript {
+  font-weight: 600;
+  font-size: 18px;
+  color: #333;
+}
+
+.feedback {
+  margin-top: 15px;
+  padding: 10px;
+  border-radius: 8px;
+  font-weight: 600;
+}
+
+.feedback.correct {
+  background-color: #d4edda;
+  color: #155724;
+}
+
+.feedback.incorrect {
+  background-color: #f8d7da;
+  color: #721c24;
+}
+
+.attempts-counter {
+  margin-top: 15px;
+  color: #6c757d;
+  font-size: 14px;
+}
+
+.listening-indicator {
+  margin: 10px 0;
+  padding: 8px 16px;
+  background-color: #e9f5fe;
+  color: #0366d6;
+  border-radius: 20px;
+  font-size: 14px;
+  animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.6;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+.error {
+  color: #dc3545;
+  margin: 10px 0;
+  font-size: 14px;
+}
+
+.task-debug {
+  font-size: 12px;
+  color: #999;
+  margin-bottom: 10px;
+  background-color: #f5f5f5;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-family: monospace;
+} 

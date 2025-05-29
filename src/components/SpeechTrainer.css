@@ -1,0 +1,95 @@
+.speech-trainer {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px;
+  font-family: 'Roboto', 'Arial', sans-serif;
+}
+
+.trainer-header {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.trainer-header h1 {
+  color: #333;
+  font-size: 32px;
+  margin-bottom: 8px;
+}
+
+.subtitle {
+  color: #666;
+  font-size: 16px;
+  margin-top: 0;
+}
+
+.trainer-content {
+  margin-top: 20px;
+}
+
+.progress-bar {
+  height: 8px;
+  background-color: #e9ecef;
+  border-radius: 4px;
+  margin-bottom: 10px;
+  overflow: hidden;
+}
+
+.progress-indicator {
+  height: 100%;
+  background-color: #4285f4;
+  transition: width 0.3s ease-in-out;
+}
+
+.task-progress {
+  text-align: center;
+  color: #666;
+  margin-bottom: 20px;
+  font-size: 14px;
+}
+
+.completion-message {
+  text-align: center;
+  padding: 40px;
+  background-color: #f8f9fa;
+  border-radius: 12px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.completion-message h2 {
+  color: #155724;
+  margin-bottom: 16px;
+}
+
+.completion-message p {
+  color: #333;
+  margin-bottom: 24px;
+}
+
+.restart-button {
+  padding: 12px 24px;
+  background-color: #4285f4;
+  color: white;
+  border: none;
+  border-radius: 24px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.restart-button:hover {
+  background-color: #2b6dd8;
+}
+
+@media (max-width: 600px) {
+  .speech-trainer {
+    padding: 10px;
+  }
+  
+  .trainer-header h1 {
+    font-size: 24px;
+  }
+  
+  .subtitle {
+    font-size: 14px;
+  }
+} 
