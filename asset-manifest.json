@@ -1,0 +1,15 @@
+{
+  "files": {
+    "main.css": "/dob-slov-speech-trainer/static/css/main.278340d7.css",
+    "main.js": "/dob-slov-speech-trainer/static/js/main.3545cd83.js",
+    "static/js/453.d584925d.chunk.js": "/dob-slov-speech-trainer/static/js/453.d584925d.chunk.js",
+    "index.html": "/dob-slov-speech-trainer/index.html",
+    "main.278340d7.css.map": "/dob-slov-speech-trainer/static/css/main.278340d7.css.map",
+    "main.3545cd83.js.map": "/dob-slov-speech-trainer/static/js/main.3545cd83.js.map",
+    "453.d584925d.chunk.js.map": "/dob-slov-speech-trainer/static/js/453.d584925d.chunk.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.278340d7.css",
+    "static/js/main.3545cd83.js"
+  ]
+}
