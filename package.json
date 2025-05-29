@@ -2,7 +2,7 @@
   "name": "dob-slov-speech-trainer",
   "version": "0.1.0",
   "private": true,
-  "homepage": "https://fedorkurusin.github.io/dob-slov-speech-trainer",
+  "homepage": "https://fkurushin.github.io/dob-slov-speech-trainer",
   "dependencies": {
     "@testing-library/dom": "^10.4.0",
     "@testing-library/jest-dom": "^6.6.3",
