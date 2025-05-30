@@ -168,13 +168,13 @@
 }
 
 /* Confidence meter styles */
-.confidence-meter {
+.confidence-meter, .similarity-meter {
   margin: 15px 0;
   width: 100%;
   max-width: 300px;
 }
 
-.confidence-meter p {
+.confidence-meter p, .similarity-meter p {
   margin-bottom: 5px;
   font-size: 14px;
   color: #555;
