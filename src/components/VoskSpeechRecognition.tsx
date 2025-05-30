@@ -3,9 +3,20 @@ import { KaldiRecognizer } from 'vosk-browser';
 import { ServerMessageResult } from 'vosk-browser/dist/interfaces';
 import VoskService from '../services/VoskService';
 
+// Interface for speech recognition result with confidence scores
+export interface SpeechRecognitionResult {
+  text: string;
+  words: Array<{
+    word: string;
+    confidence: number;
+    startTime: number;
+    endTime: number;
+  }>;
+}
+
 // Interface for the component props
 interface VoskSpeechRecognitionProps {
-  onResult: (transcript: string) => void;
+  onResult: (result: SpeechRecognitionResult) => void;
   isListening: boolean;
 }
 
@@ -96,14 +107,31 @@ const VoskSpeechRecognition: React.FC<VoskSpeechRecognitionProps> = ({ onResult,
         
         // Create recognizer
         const recognizer = new model.KaldiRecognizer(audioContext.sampleRate);
+        // Enable word confidence scores
+        recognizer.setWords(true);
         recognizerRef.current = recognizer;
         
         // Set up result callback
         recognizer.on("result", (message) => {
           // Type assertion - we know this is a result message since we're in the 'result' event handler
           const resultMessage = message as ServerMessageResult;
-          if (resultMessage.result && resultMessage.result.text) {
-            onResult(resultMessage.result.text.toLowerCase());
+          if (resultMessage.result) {
+            // Extract the full text
+            const text = resultMessage.result.text.toLowerCase();
+            
+            // Extract word details with confidence scores
+            const words = resultMessage.result.result.map(wordInfo => ({
+              word: wordInfo.word.toLowerCase(),
+              confidence: wordInfo.conf, // Confidence score 0-1
+              startTime: wordInfo.start,
+              endTime: wordInfo.end
+            }));
+            
+            // Send the detailed result to the parent component
+            onResult({
+              text,
+              words
+            });
           }
         });
         

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { SpeechTask } from '../data/tasks';
-import VoskSpeechRecognition from './VoskSpeechRecognition';
+import VoskSpeechRecognition, { SpeechRecognitionResult } from './VoskSpeechRecognition';
 import './TaskCard.css';
 
 interface TaskCardProps {
@@ -13,11 +13,16 @@ const normalizeRussianText = (text: string): string => {
   return text.replace(/ё/gi, 'е');
 };
 
+// Confidence threshold for good pronunciation (0-1)
+const CONFIDENCE_THRESHOLD = 0.85;
+
 const TaskCard: React.FC<TaskCardProps> = ({ task, onTaskCompleted }) => {
   const [isListening, setIsListening] = useState<boolean>(false);
   const [transcript, setTranscript] = useState<string>('');
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
   const [attempts, setAttempts] = useState<number>(0);
+  const [confidenceLevel, setConfidenceLevel] = useState<number | null>(null);
+  const [pronunciationFeedback, setPronunciationFeedback] = useState<string>('');
 
   // Debug: Log task information when it changes
   useEffect(() => {
@@ -33,49 +38,82 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, onTaskCompleted }) => {
     setIsCorrect(null);
     setAttempts(0);
     setIsListening(false);
+    setConfidenceLevel(null);
+    setPronunciationFeedback('');
   }, [task]);
 
   const handleStartListening = useCallback(() => {
     setIsListening(true);
     setTranscript('');
     setIsCorrect(null);
+    setConfidenceLevel(null);
+    setPronunciationFeedback('');
   }, []);
 
-  const handleSpeechResult = useCallback((text: string) => {
+  const handleSpeechResult = useCallback((result: SpeechRecognitionResult) => {
     setIsListening(false);
-    setTranscript(text);
+    setTranscript(result.text);
     
     // Clean up the input text and expected word for comparison
-    const cleanText = normalizeRussianText(text.toLowerCase().trim());
+    const cleanText = normalizeRussianText(result.text.toLowerCase().trim());
     const cleanExpected = normalizeRussianText(task.expectedWord.toLowerCase().trim());
     
-    // Check if the spoken text matches the expected word
-    // Using exact match or word boundary check to avoid partial matches
-    const isMatch = 
+    // Check for exact match or word boundary
+    const isExactMatch = 
       cleanText === cleanExpected || 
       cleanText.split(/\s+/).includes(cleanExpected) ||
       new RegExp(`\\b${cleanExpected}\\b`).test(cleanText);
     
+    // Find the expected word in the recognized words to check confidence
+    const recognizedWord = result.words.find(word => 
+      normalizeRussianText(word.word) === cleanExpected ||
+      normalizeRussianText(word.word).includes(cleanExpected) ||
+      cleanExpected.includes(normalizeRussianText(word.word))
+    );
+    
+    // Extract confidence level if word was found
+    const confidence = recognizedWord ? recognizedWord.confidence : 0;
+    setConfidenceLevel(confidence);
+    
+    // Determine if pronunciation is acceptable based on confidence
+    const isGoodPronunciation = confidence >= CONFIDENCE_THRESHOLD;
+    
+    // Only count as correct if the word is recognized AND well-pronounced
+    const isCorrectAnswer = isExactMatch && isGoodPronunciation;
+    
+    // Provide specific feedback based on the issue
+    if (isExactMatch && !isGoodPronunciation) {
+      setPronunciationFeedback('Слово распознано, но произношение недостаточно четкое. Попробуйте еще раз.');
+    } else if (!isExactMatch) {
+      setPronunciationFeedback('Слово не распознано. Пожалуйста, произнесите его еще раз.');
+    } else {
+      setPronunciationFeedback('');
+    }
+    
     console.log('Speech recognition:', {
       taskId: task.id,
       prompt: task.prompt,
-      said: text,
+      said: result.text,
       normalizedSaid: cleanText,
       expected: task.expectedWord,
       normalizedExpected: cleanExpected,
-      isMatch: isMatch
+      isExactMatch,
+      confidence,
+      isGoodPronunciation,
+      isCorrectAnswer,
+      words: result.words
     });
     
-    setIsCorrect(isMatch);
+    setIsCorrect(isCorrectAnswer);
     setAttempts(prev => prev + 1);
     
-    if (isMatch) {
+    if (isCorrectAnswer) {
       // Move to next task after a brief delay to show success message
       setTimeout(() => {
         onTaskCompleted();
       }, 1500);
     }
-  }, [task, onTaskCompleted]); // Add task as a dependency
+  }, [task, onTaskCompleted]);
 
   return (
     <div className="task-card">
@@ -112,7 +150,25 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, onTaskCompleted }) => {
           <div className="transcript-container">
             <p>Вы сказали: <span className="transcript">{transcript}</span></p>
             
-            {isCorrect === false && (
+            {confidenceLevel !== null && (
+              <div className="confidence-meter">
+                <p>Четкость произношения: {Math.round(confidenceLevel * 100)}%</p>
+                <div className="progress-bar">
+                  <div 
+                    className={`progress-indicator ${confidenceLevel >= CONFIDENCE_THRESHOLD ? 'good' : 'poor'}`}
+                    style={{ width: `${confidenceLevel * 100}%` }}
+                  ></div>
+                </div>
+              </div>
+            )}
+            
+            {pronunciationFeedback && (
+              <p className="feedback pronunciation">
+                {pronunciationFeedback}
+              </p>
+            )}
+            
+            {isCorrect === false && !pronunciationFeedback && (
               <p className="feedback incorrect">
                 Неправильно. Попробуйте еще раз.
               </p>
