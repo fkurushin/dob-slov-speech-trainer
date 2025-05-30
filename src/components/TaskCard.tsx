@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { SpeechTask } from '../data/tasks';
 import VoskSpeechRecognition, { SpeechRecognitionResult } from './VoskSpeechRecognition';
+import { useDifficulty } from '../context/DifficultyContext';
 import './TaskCard.css';
 
 interface TaskCardProps {
@@ -12,12 +13,6 @@ interface TaskCardProps {
 const normalizeRussianText = (text: string): string => {
   return text.replace(/ё/gi, 'е');
 };
-
-// Confidence threshold for good pronunciation (0-1)
-const CONFIDENCE_THRESHOLD = 0.85;
-
-// Word similarity threshold
-const SIMILARITY_THRESHOLD = 0.7; // 0-1 scale, higher means more strict
 
 // Calculate similarity between two strings (0-1)
 const calculateStringSimilarity = (s1: string, s2: string): number => {
@@ -39,6 +34,10 @@ const calculateStringSimilarity = (s1: string, s2: string): number => {
 };
 
 const TaskCard: React.FC<TaskCardProps> = ({ task, onTaskCompleted }) => {
+  // Get difficulty settings from context
+  const { settings, difficulty } = useDifficulty();
+  const { confidenceThreshold, similarityThreshold } = settings;
+  
   const [isListening, setIsListening] = useState<boolean>(false);
   const [transcript, setTranscript] = useState<string>('');
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
@@ -88,7 +87,7 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, onTaskCompleted }) => {
     setSimilarity(wordSimilarity);
     
     // Check for text similarity first
-    const isSimilarEnough = wordSimilarity >= SIMILARITY_THRESHOLD;
+    const isSimilarEnough = wordSimilarity >= similarityThreshold;
     
     // Only check exact match if similarity is high enough
     const isExactMatch = 
@@ -116,13 +115,13 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, onTaskCompleted }) => {
     setConfidenceLevel(confidence);
     
     // Only consider good pronunciation if similarity is high enough
-    const isGoodPronunciation = isSimilarEnough && confidence >= CONFIDENCE_THRESHOLD;
+    const isGoodPronunciation = isSimilarEnough && confidence >= confidenceThreshold;
     
     // Only count as correct if the word is recognized AND well-pronounced
     const isCorrectAnswer = (isExactMatch || isSimilarEnough) && isGoodPronunciation;
     
     // Provide specific feedback based on the issue
-    if (wordSimilarity < SIMILARITY_THRESHOLD) {
+    if (wordSimilarity < similarityThreshold) {
       // If the word is completely different
       setPronunciationFeedback(`Вы сказали совсем другое слово. Нужно: ${task.expectedWord}`);
     } else if (!isGoodPronunciation) {
@@ -140,12 +139,15 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, onTaskCompleted }) => {
       expected: task.expectedWord,
       normalizedExpected: cleanExpected,
       similarity: wordSimilarity,
+      similarityThreshold,
+      confidenceThreshold,
       isSimilarEnough,
       isExactMatch,
       confidence,
       isGoodPronunciation,
       isCorrectAnswer,
-      words: result.words
+      words: result.words,
+      difficulty
     });
     
     setIsCorrect(isCorrectAnswer);
@@ -157,7 +159,7 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, onTaskCompleted }) => {
         onTaskCompleted();
       }, 1500);
     }
-  }, [task, onTaskCompleted]);
+  }, [task, onTaskCompleted, similarityThreshold, confidenceThreshold, difficulty]);
 
   return (
     <div className="task-card">
@@ -199,7 +201,7 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, onTaskCompleted }) => {
                 <p>Схожесть со словом "{task.expectedWord}": {Math.round(similarity * 100)}%</p>
                 <div className="progress-bar">
                   <div 
-                    className={`progress-indicator ${similarity >= SIMILARITY_THRESHOLD ? 'good' : 'poor'}`}
+                    className={`progress-indicator ${similarity >= similarityThreshold ? 'good' : 'poor'}`}
                     style={{ width: `${similarity * 100}%` }}
                   ></div>
                 </div>
@@ -211,7 +213,7 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, onTaskCompleted }) => {
                 <p>Четкость произношения: {Math.round(confidenceLevel * 100)}%</p>
                 <div className="progress-bar">
                   <div 
-                    className={`progress-indicator ${confidenceLevel >= CONFIDENCE_THRESHOLD ? 'good' : 'poor'}`}
+                    className={`progress-indicator ${confidenceLevel >= confidenceThreshold ? 'good' : 'poor'}`}
                     style={{ width: `${confidenceLevel * 100}%` }}
                   ></div>
                 </div>

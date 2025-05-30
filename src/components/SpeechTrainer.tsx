@@ -1,11 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { tasks } from '../data/tasks';
 import TaskCard from './TaskCard';
+import DifficultySelector from './DifficultySelector';
+import { useDifficulty } from '../context/DifficultyContext';
 import './SpeechTrainer.css';
 
 const SpeechTrainer: React.FC = () => {
   const [currentTaskIndex, setCurrentTaskIndex] = useState<number>(0);
   const [isCompleted, setIsCompleted] = useState<boolean>(false);
+  const { difficulty, setDifficulty } = useDifficulty();
   
   // Debug: Log current task index and corresponding task
   useEffect(() => {
@@ -34,6 +37,11 @@ const SpeechTrainer: React.FC = () => {
         <p className="subtitle">Тренажер для практики произношения</p>
       </header>
 
+      <DifficultySelector 
+        currentDifficulty={difficulty}
+        onChange={setDifficulty}
+      />
+      
       <div className="trainer-content">
         {!isCompleted ? (
           <>
