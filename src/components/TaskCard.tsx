@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { SpeechTask } from '../data/tasks';
-import SpeechRecognition from './SpeechRecognition';
+import VoskSpeechRecognition from './VoskSpeechRecognition';
 import './TaskCard.css';
 
 interface TaskCardProps {
@@ -103,7 +103,7 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, onTaskCompleted }) => {
           </button>
         )}
         
-        <SpeechRecognition 
+        <VoskSpeechRecognition
           isListening={isListening} 
           onResult={handleSpeechResult} 
         />
