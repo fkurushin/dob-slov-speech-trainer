@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { createModel, Model, KaldiRecognizer } from 'vosk-browser';
+import { KaldiRecognizer } from 'vosk-browser';
 import { ServerMessageResult } from 'vosk-browser/dist/interfaces';
+import VoskService from '../services/VoskService';
 
 // Interface for the component props
 interface VoskSpeechRecognitionProps {
@@ -8,66 +9,38 @@ interface VoskSpeechRecognitionProps {
   isListening: boolean;
 }
 
-// Model download status
-type ModelStatus = 'not-loaded' | 'loading' | 'loaded' | 'error';
-
 const VoskSpeechRecognition: React.FC<VoskSpeechRecognitionProps> = ({ onResult, isListening }) => {
   // State for managing component
   const [error, setError] = useState<string>('');
-  const [modelStatus, setModelStatus] = useState<ModelStatus>('not-loaded');
-  const [loadingProgress, setLoadingProgress] = useState<number>(0);
+  const [modelStatus, setModelStatus] = useState<string>(VoskService.getInstance().getModelStatus());
+  const [loadingProgress, setLoadingProgress] = useState<number>(VoskService.getInstance().getLoadingProgress());
   
   // Refs to manage instances
-  const modelRef = useRef<Model | null>(null);
   const recognizerRef = useRef<KaldiRecognizer | null>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
   const mediaStreamRef = useRef<MediaStream | null>(null);
   const processorNodeRef = useRef<ScriptProcessorNode | null>(null);
   
-  // Initialize Vosk and load the model
+  // Subscribe to VoskService status and progress updates
   useEffect(() => {
-    async function initVosk() {
-      if (modelStatus !== 'not-loaded') return;
-      
-      try {
-        setModelStatus('loading');
-        
-        // Set up a progress tracker using message events
-        const progressTracker = (event: MessageEvent) => {
-          if (event.data && event.data.type === 'progress' && typeof event.data.progress === 'number') {
-            setLoadingProgress(Math.round(event.data.progress * 100));
-          }
-        };
-        
-        // Add progress event listener to window
-        window.addEventListener('message', progressTracker);
-        
-        // Initialize Vosk
-        const model = await createModel(`${process.env.PUBLIC_URL}/models/vosk-model-small-ru.zip`, 0);
-        
-        // Remove progress listener
-        window.removeEventListener('message', progressTracker);
-        
-        modelRef.current = model;
-        setModelStatus('loaded');
-        console.log('Vosk model loaded successfully');
-      } catch (err) {
-        console.error('Error loading Vosk model:', err);
-        setError('Failed to load speech recognition model. Please try again later.');
-        setModelStatus('error');
-      }
-    }
+    const voskService = VoskService.getInstance();
     
-    initVosk();
+    // Add status listener
+    const removeStatusListener = voskService.addStatusListener((status) => {
+      setModelStatus(status);
+    });
     
-    // Cleanup function
+    // Add progress listener
+    const removeProgressListener = voskService.addProgressListener((progress) => {
+      setLoadingProgress(progress);
+    });
+    
+    // Cleanup listeners on unmount
     return () => {
-      if (modelRef.current) {
-        modelRef.current.terminate();
-        modelRef.current = null;
-      }
+      removeStatusListener();
+      removeProgressListener();
     };
-  }, [modelStatus]);
+  }, []);
   
   // Handle cleanup of audio resources
   const cleanupAudio = useCallback(() => {
@@ -99,12 +72,10 @@ const VoskSpeechRecognition: React.FC<VoskSpeechRecognitionProps> = ({ onResult,
   // Start/stop listening based on isListening prop
   useEffect(() => {
     async function startRecognition() {
-      // Don't start if model is not loaded
-      if (modelStatus !== 'loaded' || !modelRef.current) {
-        return;
-      }
-      
       try {
+        // Get the Vosk model from service
+        const model = await VoskService.getInstance().getModel();
+        
         // Clean up any existing audio processing
         cleanupAudio();
         
@@ -124,7 +95,7 @@ const VoskSpeechRecognition: React.FC<VoskSpeechRecognitionProps> = ({ onResult,
         mediaStreamRef.current = mediaStream;
         
         // Create recognizer
-        const recognizer = new modelRef.current.KaldiRecognizer(audioContext.sampleRate);
+        const recognizer = new model.KaldiRecognizer(audioContext.sampleRate);
         recognizerRef.current = recognizer;
         
         // Set up result callback
@@ -153,7 +124,7 @@ const VoskSpeechRecognition: React.FC<VoskSpeechRecognitionProps> = ({ onResult,
         
       } catch (err) {
         console.error('Error starting speech recognition:', err);
-        setError('Failed to access microphone. Please ensure microphone permissions are granted.');
+        setError('Failed to access microphone or load model. Please ensure microphone permissions are granted.');
         cleanupAudio();
       }
     }
@@ -166,7 +137,7 @@ const VoskSpeechRecognition: React.FC<VoskSpeechRecognitionProps> = ({ onResult,
     
     // Cleanup on unmount
     return cleanupAudio;
-  }, [isListening, modelStatus, cleanupAudio, onResult]);
+  }, [isListening, cleanupAudio, onResult]);
   
   // Render loading, error states or recognition UI
   return (
